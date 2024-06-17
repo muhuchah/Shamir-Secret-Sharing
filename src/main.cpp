@@ -3,6 +3,9 @@
 #include <cstdlib>
 #include <ctime>
 #include <cmath>
+#include <algorithm>
+#include <stdexcept>
+
 
 // Function to generate random coefficients
 std::vector<int> generateRandomCoefficients(int t, int MOD) {
@@ -40,27 +43,29 @@ std::vector<std::pair<int, int>> generateShares(int secret, int n, int t, int MO
     return shares;
 }
 
-// Function to perform modular inverse
-int modInverse(int a, int MOD) {
-    int m0 = MOD, t, q;
-    int x0 = 0, x1 = 1;
-
-    if (MOD == 1) return 0;
-
-    while (a > 1) {
-        q = a / MOD;
-        t = MOD;
-
-        MOD = a % MOD, a = t;
-        t = x0;
-
-        x0 = x1 - q * x0;
-        x1 = t;
+// To compute x^y under modulo m
+int power(int x, unsigned int y, unsigned int MOD) {
+    if (y == 0) {
+        return 1;
     }
 
-    if (x1 < 0) x1 += m0;
+    int p = power(x, y / 2, MOD) % MOD;
+    p = (p * p) % MOD;
 
-    return x1;
+    return (y % 2 == 0) ? p : (x * p) % MOD;
+}
+
+// Function to perform modular inverse
+int modInverse(int a, int MOD) {
+    int g = std::__gcd(a, MOD);
+    if (g != 1) {
+        throw std::invalid_argument("Inverse doesn't exist");
+    }
+    else {
+        // If a and m are relatively prime, then modulo
+        // inverse is a^(m-2) mode m
+        return power(a, MOD - 2, MOD);
+    }
 }
 
 // Function to reconstruct the secret using Lagrange interpolation
@@ -76,8 +81,8 @@ int reconstructSecret(const std::vector<std::pair<int, int>>& shares, int MOD) {
         for (int j = 0; j < k; ++j) {
             if (i != j) {
                 int xj = shares[j].first;
-                term = (term * (MOD - xj)) % MOD;
-                term = (term * modInverse((xi - xj + MOD) % MOD, MOD)) % MOD;
+                term = (term * xj) % MOD;
+                term = (term * modInverse((xj - xi) % MOD, MOD)) % MOD;
             }
         }
         secret = (secret + term) % MOD;
@@ -114,6 +119,7 @@ int main() {
 
     if (!isPrime(MOD)) {
         std::cerr << "MOD must be a prime number." << std::endl;
+        return 1;
     }
 
     std::cout << "Enter the secret: ";
