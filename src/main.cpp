@@ -17,27 +17,26 @@ std::vector<int> generateRandomCoefficients(int t, int MOD) {
 }
 
 // Function to evaluate polynomial at x
-int evaluatePolynomial(const std::vector<int>& coefficients, int x, int MOD, int secret) {
+int evaluatePolynomial(const std::vector<int>& coefficients, int x, int MOD) {
     int result = 0;
     int power = 1;
     for (int coeff : coefficients) {
         result = (result + coeff * power) % MOD;
         power = (power * x) % MOD;
     }
-    result += secret;
-
     return result;
 }
 
 // Function to generate shares
 std::vector<std::pair<int, int>> generateShares(int secret, int n, int t, int MOD) {
     // The first coefficient is the secret
-    std::vector<int> coefficients = generateRandomCoefficients(t, MOD);
+    std::vector<int> coefficients = generateRandomCoefficients(t - 1, MOD);
+    coefficients.insert(coefficients.begin(), secret);
 
     std::vector<std::pair<int, int>> shares;
     for (int i = 1; i <= n; ++i) {
         int x = i;
-        int y = evaluatePolynomial(coefficients, x, MOD, secret);
+        int y = evaluatePolynomial(coefficients, x, MOD);
         shares.push_back({x, y});
     }
     return shares;
@@ -81,8 +80,8 @@ int reconstructSecret(const std::vector<std::pair<int, int>>& shares, int MOD) {
         for (int j = 0; j < k; ++j) {
             if (i != j) {
                 int xj = shares[j].first;
-                term = (term * xj) % MOD;
-                term = (term * modInverse((xj - xi) % MOD, MOD)) % MOD;
+                term = (term * (MOD - xj)) % MOD;
+                term = (term * modInverse((xi - xj + MOD) % MOD, MOD)) % MOD;
             }
         }
         secret = (secret + term) % MOD;
@@ -110,6 +109,9 @@ bool isPrime(int number) {
 }
 
 int main() {
+    int inverse = modInverse(3, 11);
+    std::cout << inverse << std::endl;
+
     int n, MOD, secret, t;
 
     std::cout << "Enter the number of people: ";
