@@ -109,9 +109,6 @@ bool isPrime(int number) {
 }
 
 int main() {
-    int inverse = modInverse(3, 11);
-    std::cout << inverse << std::endl;
-
     int n, MOD, secret, t;
 
     std::cout << "Enter the number of people: ";
