@@ -108,49 +108,77 @@ bool isPrime(int number) {
     return true;
 }
 
+
 int main() {
     int n, MOD, secret, t;
+    char choice;
 
-    std::cout << "Enter the number of people: ";
-    std::cin >> n;
-    std::cout << "Enter the modulus (MOD): ";
-    std::cin >> MOD;
+    while (true) {
+        std::cout << "Enter <s> to share a secret." << std::endl
+                << "Enter <r> to reconstruct a secret." << std::endl
+                << "Enter <e> to exit." << std::endl;
+        std::cin >> choice;
 
-    if (!isPrime(MOD)) {
-        std::cerr << "MOD must be a prime number." << std::endl;
-        return 1;
+        if (choice == 's') {
+            std::cout << "Enter the number of people: ";
+            std::cin >> n;
+            std::cout << "Enter the modulus (MOD): ";
+            std::cin >> MOD;
+
+            if (!isPrime(MOD)) {
+                std::cerr << "MOD must be a prime number." << std::endl;
+                return 1;
+            }
+
+            std::cout << "Enter the secret: ";
+            std::cin >> secret;
+            std::cout << "Enter the threshold (t): ";
+            std::cin >> t;
+
+            if (t > n) {
+                std::cerr << "Threshold t cannot be greater than the number of people n." << std::endl;
+                return 1;
+            }
+
+            srand(time(nullptr));
+
+            std::vector<std::pair<int, int>> shares = generateShares(secret, n, t, MOD);
+
+            std::cout << "Generated shares: " << std::endl;
+            for (const auto& share : shares) {
+                std::cout << "x: " << share.first << ", y: " << share.second << std::endl;
+            }
+        } else if (choice == 'r') {
+            std::cout << "Enter the modulus (MOD): ";
+            std::cin >> MOD;
+
+            if (!isPrime(MOD)) {
+                std::cerr << "MOD must be a prime number." << std::endl;
+                return 1;
+            }
+
+            std::cout << "Enter the threshold (t): ";
+            std::cin >> t;
+
+            std::cout << "Enter at least " << t << " shares to reconstruct the secret:" << std::endl;
+            std::vector<std::pair<int, int>> inputShares;
+            for (int i = 0; i < t; ++i) {
+                int x, y;
+                std::cout << "Enter share " << i + 1 << " (x y): ";
+                std::cin >> x >> y;
+                inputShares.emplace_back(x, y);
+            }
+
+            int reconstructedSecret = reconstructSecret(inputShares, MOD);
+            std::cout << "Reconstructed secret: " << reconstructedSecret << std::endl;
+        } else if (choice == 'e') {
+            std::cout << "see ya :)" << std::endl;
+            break;
+        } else {
+            std::cerr << "Invalid choice. Please enter 's' to share a secret or 'r' to reconstruct a secret." << std::endl;
+            return 1;
+        }
     }
-
-    std::cout << "Enter the secret: ";
-    std::cin >> secret;
-    std::cout << "Enter the threshold (t): ";
-    std::cin >> t;
-
-    if (t > n) {
-        std::cerr << "Threshold t cannot be greater than the number of people n." << std::endl;
-        return 1;
-    }
-
-    srand(time(0));
-
-    std::vector<std::pair<int, int>> shares = generateShares(secret, n, t, MOD);
-
-    std::cout << "Generated shares: " << std::endl;
-    for (const auto& share : shares) {
-        std::cout << "x: " << share.first << ", y: " << share.second << std::endl;
-    }
-
-    std::cout << "\nEnter at least " << t << " shares to reconstruct the secret:" << std::endl;
-    std::vector<std::pair<int, int>> inputShares;
-    for (int i = 0; i < t; ++i) {
-        int x, y;
-        std::cout << "Enter share " << i + 1 << " (x y): ";
-        std::cin >> x >> y;
-        inputShares.push_back({x, y});
-    }
-
-    int reconstructedSecret = reconstructSecret(inputShares, MOD);
-    std::cout << "Reconstructed secret: " << reconstructedSecret << std::endl;
 
     return 0;
 }
