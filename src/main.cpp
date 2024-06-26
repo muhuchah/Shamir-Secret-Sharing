@@ -36,13 +36,13 @@ std::vector<std::pair<int, int>> generateShares(int secret, int n, int t, int MO
     for (int i = 1; i <= n; ++i) {
         int x = i;
         int y = evaluatePolynomial(coefficients, x, MOD);
-        shares.push_back({x, y});
+        shares.emplace_back(x, y);
     }
     return shares;
 }
 
 // To compute x^y under modulo m
-int power(int x, unsigned int y, unsigned int MOD) {
+int power(int x, int y, int MOD) {
     if (y == 0) {
         return 1;
     }
@@ -69,7 +69,7 @@ int modInverse(int a, int MOD) {
 // Function to reconstruct the secret using Lagrange interpolation
 int reconstructSecret(const std::vector<std::pair<int, int>>& shares, int MOD) {
     int secret = 0;
-    int k = shares.size();
+    size_t k = shares.size();
 
     for (int i = 0; i < k; ++i) {
         int xi = shares[i].first;
